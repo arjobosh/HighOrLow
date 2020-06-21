@@ -1,18 +1,31 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HighOrLow : MonoBehaviour
 {
     Deck deck;
+    private int cardsToDraw;
+    public Text cardText;
 
     // Start is called before the first frame update
     void Start()
     {
+        cardsToDraw = 2;
         deck = new Deck();
-        deck.PrintDeck();        
+        //deck.PrintDeck();        
         deck.Shuffle();
+
+        List<Card> hand = deck.Draw(cardsToDraw);
+        
+        for (int i = 0; i < hand.Count; i++)
+        {
+            cardText.text += hand[i].GetSuit() + " of " + hand[i].GetValue() + ", ";
+        }
+        cardText.text += "; " + deck.GetCurrentDeckSize();
     }
 
     // Update is called once per frame
@@ -24,15 +37,19 @@ public class HighOrLow : MonoBehaviour
 
 public class Deck
 {
-    // aces = 1, jacks = 11, queens = 12, kings = 13
-    List<Card> deck;
-    int deckSize;
+    private List<Card> deck;
+    private int deckSize;
 
     public Deck()
     {
         deckSize = 52;
         deck = new List<Card>();
         Initialize();
+    }
+
+    public int GetCurrentDeckSize()
+    {
+        return deck.Count;
     }
 
     public void PrintDeck()
@@ -111,9 +128,88 @@ public class Deck
         }                   
     }
 
-    public void Draw(int numToDraw)
+    private Card FindCard(int value, char suit)
+    {        
+        for (int i = 0; i < deck.Count; i++)
+        {
+            if (deck[i].GetValue().Equals(value) && deck[i].GetSuit().Equals(suit))
+            {                
+                return deck[i];
+            }
+        }
+
+        return null;
+    }
+
+    public List<Card> Draw(int numToDraw)
     {
-        
+        // aces = 1, jacks = 11, queens = 12, kings = 13
+        // diamonds, clubs, spades excluding the ace of spades = 1 / 52
+        // hearts = 2 / 52  = 1 / 26
+        // ace of spades    = 3 / 52
+
+        // P(non-special card) = 1/52
+        // P(draw a heart) = 13/52 * 2
+        // P(draw ace of spades) = 1/52 * 3
+
+        List<Card> hand = new List<Card>();
+        float baseChance = 1 / 52;
+
+        for (int i = 0; i < numToDraw; i++)
+        {
+
+            // generate a random number between 0 and 1
+            int result = UnityEngine.Random.Range(1, 7);
+            Card card;
+
+            while (true)
+            {
+                if (result == 1)
+                {
+                    // draw a random non-special card, if it exists                
+                    int randomSuit = UnityEngine.Random.Range(1, 4);
+
+                    if (randomSuit == 1)
+                    {
+                        int randomVal = UnityEngine.Random.Range(1, 14);
+                        card = FindCard(randomVal, 'd');
+                    }
+                    else if (randomSuit == 2)
+                    {
+                        int randomVal = UnityEngine.Random.Range(1, 14);
+                        card = FindCard(randomVal, 'c');
+                    }
+                    else
+                    {
+                        int randomVal = UnityEngine.Random.Range(2, 14);
+                        card = FindCard(randomVal, 's');
+                    }
+
+                }
+                else if (result > 1 && result <= 3)
+                {
+                    // draw a random heart, if it exists
+                    int randomHeart = UnityEngine.Random.Range(1, 14);
+                    card = FindCard(randomHeart, 'h');
+                }
+                else
+                {
+                    // draw the ace of spades, if it exists
+                    card = FindCard(1, 's');
+                }
+
+                if (card == null)
+                    continue;
+                else
+                {
+                    hand.Add(card);
+                    deck.Remove(card);
+                    break;
+                }
+            }
+        }
+
+        return hand;
     }
 }
 
@@ -121,11 +217,48 @@ public class Card
 {
     private int value;
     private char suit;
-    
+    private Color color;
+    private float probability;
+
     public Card(int cardValue, char cardSuit)
     {
         value = cardValue;
         suit = cardSuit;
+        SetProbability();
+        SetColor();
+    }
+
+    private void SetProbability()
+    {
+        float baseProb = 1 / 52;
+
+        if (suit == 'h')
+        {
+            probability = baseProb * 2;
+        }
+        else if (suit == 's' && value == 1)
+        {
+            probability = baseProb * 3;
+        }
+        else
+        {
+            probability = baseProb;
+        }
+    }
+
+    private void SetColor()
+    {
+        color = suit.Equals('h') || suit.Equals('d') ? Color.red : Color.black;
+    }
+
+    public Color GetColor()
+    {
+        return color;
+    }
+
+    public float GetProbability()
+    {
+        return probability;
     }
 
     public int GetValue()
