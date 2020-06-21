@@ -15,17 +15,7 @@ public class HighOrLow : MonoBehaviour
     void Start()
     {
         cardsToDraw = 2;
-        deck = new Deck();
-        //deck.PrintDeck();        
-        deck.Shuffle();
-
-        List<Card> hand = deck.Draw(cardsToDraw);
-        
-        for (int i = 0; i < hand.Count; i++)
-        {
-            cardText.text += hand[i].GetSuit() + " of " + hand[i].GetValue() + ", ";
-        }
-        cardText.text += "; " + deck.GetCurrentDeckSize();
+        deck = new Deck();        
     }
 
     // Update is called once per frame
@@ -42,9 +32,18 @@ public class Deck
 
     public Deck()
     {
+        // standard deck constructor
         deckSize = 52;
         deck = new List<Card>();
-        Initialize();
+        InitializeDeck();
+    }
+
+    public Deck(int numCards)
+    {
+        // constructor for deck variants
+        deckSize = numCards;
+        deck = new List<Card>();
+        InitializeDeck(numCards);
     }
 
     public int GetCurrentDeckSize()
@@ -61,10 +60,10 @@ public class Deck
             b++;
         }
 
-        Debug.Log(deck.Count);
+        //Debug.Log(deck.Count);
     }
 
-    public int CountSuit(char suit)
+    private int CountSuit(char suit)
     {
         int suitCount = 0;        
 
@@ -76,15 +75,10 @@ public class Deck
             }
         }
 
-        //Debug.Log("HEARTS = " + deck.CountSuit('h'));
-        //Debug.Log("SPADES = " + deck.CountSuit('s'));
-        //Debug.Log("DIAMONDS = " + deck.CountSuit('d'));
-        //Debug.Log("CLUBS = " + deck.CountSuit('c'));
-
         return suitCount;
     }
 
-    public int SumDeck()
+    private int SumDeck()
     {
         int b = 0, sum = 0;
         while (b < deck.Count)
@@ -98,11 +92,11 @@ public class Deck
         return sum;
     }
 
-    private void Initialize()
+    private void InitializeDeck()
     {
-        int suitCount = 13;     // standard deck        
+        int maxCardVal = 13;     
 
-        for (int i = 1; i <= suitCount; i++)
+        for (int i = 1; i <= maxCardVal; i++)
         {
             Card hearts = new Card(i, 'h');            
             Card clubs = new Card(i, 'c');
@@ -114,6 +108,11 @@ public class Deck
             deck.Add(diamonds);
             deck.Add(spades);
         }
+    }
+
+    private void InitializeDeck(int maxVal)
+    {
+        // variant deck build        
     }
     
     public void Shuffle()
@@ -144,62 +143,52 @@ public class Deck
     public List<Card> Draw(int numToDraw)
     {
         // aces = 1, jacks = 11, queens = 12, kings = 13
-        // diamonds, clubs, spades excluding the ace of spades = 1 / 52
-        // hearts = 2 / 52  = 1 / 26
-        // ace of spades    = 3 / 52
+        // hearts 2x chance, ace of spades 3x chance
 
-        // P(non-special card) = 1/52
-        // P(draw a heart) = 13/52 * 2
-        // P(draw ace of spades) = 1/52 * 3
-
-        List<Card> hand = new List<Card>();
-        float baseChance = 1 / 52;
+        List<Card> hand = new List<Card>();        
 
         for (int i = 0; i < numToDraw; i++)
         {
-
             // generate a random number between 0 and 1
             int result = UnityEngine.Random.Range(1, 7);
+            Debug.Log(result);
             Card card;
 
             while (true)
             {
                 if (result == 1)
                 {
-                    // draw a random non-special card, if it exists                
+                    // draw a random non-special card
                     int randomSuit = UnityEngine.Random.Range(1, 4);
 
                     if (randomSuit == 1)
-                    {
-                        int randomVal = UnityEngine.Random.Range(1, 14);
-                        card = FindCard(randomVal, 'd');
+                    {                        
+                        card = FindCard(UnityEngine.Random.Range(1, 14), 'd');
                     }
                     else if (randomSuit == 2)
-                    {
-                        int randomVal = UnityEngine.Random.Range(1, 14);
-                        card = FindCard(randomVal, 'c');
+                    {                        
+                        card = FindCard(UnityEngine.Random.Range(1, 14), 'c');
                     }
                     else
-                    {
-                        int randomVal = UnityEngine.Random.Range(2, 14);
-                        card = FindCard(randomVal, 's');
+                    {                        
+                        card = FindCard(UnityEngine.Random.Range(2, 14), 's');
                     }
 
                 }
-                else if (result > 1 && result <= 3)
+                else if (result == 2 || result == 3)
                 {
-                    // draw a random heart, if it exists
-                    int randomHeart = UnityEngine.Random.Range(1, 14);
-                    card = FindCard(randomHeart, 'h');
+                    // draw a random heart
+                    card = FindCard(UnityEngine.Random.Range(1, 14), 'h');
                 }
                 else
                 {
-                    // draw the ace of spades, if it exists
+                    // draw the ace of spades
                     card = FindCard(1, 's');
                 }
 
-                if (card == null)
-                    continue;
+
+                if (card == null)                    
+                    continue;       // card was not found, find another one
                 else
                 {
                     hand.Add(card);
@@ -218,32 +207,12 @@ public class Card
     private int value;
     private char suit;
     private Color color;
-    private float probability;
 
     public Card(int cardValue, char cardSuit)
     {
         value = cardValue;
         suit = cardSuit;
-        SetProbability();
         SetColor();
-    }
-
-    private void SetProbability()
-    {
-        float baseProb = 1 / 52;
-
-        if (suit == 'h')
-        {
-            probability = baseProb * 2;
-        }
-        else if (suit == 's' && value == 1)
-        {
-            probability = baseProb * 3;
-        }
-        else
-        {
-            probability = baseProb;
-        }
     }
 
     private void SetColor()
@@ -256,10 +225,6 @@ public class Card
         return color;
     }
 
-    public float GetProbability()
-    {
-        return probability;
-    }
 
     public int GetValue()
     {
