@@ -8,20 +8,39 @@ using UnityEngine.UI;
 public class HighOrLow : MonoBehaviour
 {
     Deck deck;
+    List<Card> hand;
     private int cardsToDraw;
-    public Text cardText;
+    public Text deckText;
+    public Text handText;
 
     // Start is called before the first frame update
     void Start()
     {
         cardsToDraw = 2;
-        deck = new Deck();        
+        deck = new Deck();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void JudgeHand()
     {
-        
+
+    }
+
+    public void DrawCard()
+    {        
+        hand = deck.Draw(cardsToDraw);
+        handText.text = "";
+
+        for (int i = 0; i < hand.Count; i++)
+        {
+            if (hand[i] != null)
+                handText.text += hand[i].GetName() + " of " + hand[i].GetSuit();
+
+            if (i != hand.Count - 1)
+                handText.text += ", ";
+        }
+
+        //Debug.Log("Current card count: " + deck.GetCurrentDeckSize());
+        deckText.text = "Deck: " + deck.GetCurrentDeckSize();
     }
 }
 
@@ -44,6 +63,11 @@ public class Deck
         deckSize = numCards;
         deck = new List<Card>();
         InitializeDeck(numCards);
+    }
+
+    public int GetOriginalDeckSize()
+    {
+        return deckSize;
     }
 
     public int GetCurrentDeckSize()
@@ -128,13 +152,11 @@ public class Deck
     }
 
     private Card FindCard(int value, char suit)
-    {        
+    {
         for (int i = 0; i < deck.Count; i++)
         {
-            if (deck[i].GetValue().Equals(value) && deck[i].GetSuit().Equals(suit))
-            {                
-                return deck[i];
-            }
+            if (deck[i].GetValue() == value && deck[i].GetSuit() == suit)
+                return deck[i];            
         }
 
         return null;
@@ -145,57 +167,52 @@ public class Deck
         // aces = 1, jacks = 11, queens = 12, kings = 13
         // hearts 2x chance, ace of spades 3x chance
 
-        List<Card> hand = new List<Card>();        
+        List<Card> hand = new List<Card>();
 
         for (int i = 0; i < numToDraw; i++)
         {
             // generate a random number between 0 and 1
             int result = UnityEngine.Random.Range(1, 7);
-            Debug.Log(result);
-            Card card;
 
-            while (true)
+            Card drawnCard;
+
+            if (result == 1)
             {
-                if (result == 1)
+                // draw a random non-special card
+                int randomSuit = UnityEngine.Random.Range(1, 4);
+
+                if (randomSuit == 1)
                 {
-                    // draw a random non-special card
-                    int randomSuit = UnityEngine.Random.Range(1, 4);
-
-                    if (randomSuit == 1)
-                    {                        
-                        card = FindCard(UnityEngine.Random.Range(1, 14), 'd');
-                    }
-                    else if (randomSuit == 2)
-                    {                        
-                        card = FindCard(UnityEngine.Random.Range(1, 14), 'c');
-                    }
-                    else
-                    {                        
-                        card = FindCard(UnityEngine.Random.Range(2, 14), 's');
-                    }
-
+                    drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'd');
                 }
-                else if (result == 2 || result == 3)
+                else if (randomSuit == 2)
                 {
-                    // draw a random heart
-                    card = FindCard(UnityEngine.Random.Range(1, 14), 'h');
+                    drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'c');
                 }
                 else
                 {
-                    // draw the ace of spades
-                    card = FindCard(1, 's');
+                    drawnCard = FindCard(UnityEngine.Random.Range(2, 14), 's');
                 }
 
-
-                if (card == null)                    
-                    continue;       // card was not found, find another one
-                else
-                {
-                    hand.Add(card);
-                    deck.Remove(card);
-                    break;
-                }
             }
+            else if (result == 2 || result == 3)
+            {
+                // draw a random heart
+                drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'h');
+            }
+            else
+            {
+                // draw the ace of spades if it wasn't drawn already
+                Debug.Log("drew ace of spades");
+                drawnCard = FindCard(1, 's');
+            }
+
+            if (drawnCard != null)
+            {
+                hand.Add(drawnCard);
+                deck.Remove(drawnCard);
+                //Debug.Log(deck.Remove(drawnCard) ? "card removal success" : "card removal failed);
+            }            
         }
 
         return hand;
@@ -207,12 +224,41 @@ public class Card
     private int value;
     private char suit;
     private Color color;
-
+    private string name;
+    
     public Card(int cardValue, char cardSuit)
     {
         value = cardValue;
         suit = cardSuit;
+        SetName();
         SetColor();
+    }
+
+    public string GetName()
+    {
+        return name;
+    }
+
+    private void SetName()
+    {
+        switch (value)
+        {
+            case 1:
+                name = "Ace";
+                break;
+            case 11:
+                name = "Jack";
+                break;
+            case 12:
+                name = "Queen";
+                break;
+            case 13:
+                name = "King";
+                break;
+            default:
+                name = value.ToString();
+                break;
+        }
     }
 
     private void SetColor()
@@ -224,7 +270,6 @@ public class Card
     {
         return color;
     }
-
 
     public int GetValue()
     {
