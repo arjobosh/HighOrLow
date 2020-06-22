@@ -33,7 +33,7 @@ public class HighOrLow : MonoBehaviour
         for (int i = 0; i < hand.Count; i++)
         {
             if (hand[i] != null)
-                handText.text += hand[i].GetName() + " of " + hand[i].GetSuit();
+                handText.text += hand[i].GetValueName() + " of " + hand[i].GetSuitName();
 
             if (i != hand.Count - 1)
                 handText.text += ", ";
@@ -87,7 +87,7 @@ public class Deck
         //Debug.Log(deck.Count);
     }
 
-    private int CountSuit(char suit)
+    private int CountCurrentSuit(char suit)
     {
         int suitCount = 0;        
 
@@ -102,7 +102,7 @@ public class Deck
         return suitCount;
     }
 
-    private int SumDeck()
+    private int SumCurrentDeck()
     {
         int b = 0, sum = 0;
         while (b < deck.Count)
@@ -164,55 +164,47 @@ public class Deck
 
     public List<Card> Draw(int numToDraw)
     {
-        // aces = 1, jacks = 11, queens = 12, kings = 13
-        // hearts 2x chance, ace of spades 3x chance
-
         List<Card> hand = new List<Card>();
 
         for (int i = 0; i < numToDraw; i++)
         {
-            // generate a random number between 0 and 1
-            int result = UnityEngine.Random.Range(1, 7);
-
-            Card drawnCard;
-
-            if (result == 1)
+            while (true)
             {
-                // draw a random non-special card
-                int randomSuit = UnityEngine.Random.Range(1, 4);
+                Card drawnCard;
 
-                if (randomSuit == 1)
+                // hearts 2x chance, ace of spades 3x chance
+                int result = UnityEngine.Random.Range(1, 7);
+
+                if (result == 1)
                 {
-                    drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'd');
+                    // draw a random non-special card
+                    int randomSuit = UnityEngine.Random.Range(1, 4);
+
+                    if (randomSuit == 1)
+                        drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'd');
+                    else if (randomSuit == 2)
+                        drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'c');
+                    else
+                        drawnCard = FindCard(UnityEngine.Random.Range(2, 14), 's');
                 }
-                else if (randomSuit == 2)
+                else if (result == 2 || result == 3)
                 {
-                    drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'c');
+                    // draw a random hearts card
+                    drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'h');
                 }
                 else
                 {
-                    drawnCard = FindCard(UnityEngine.Random.Range(2, 14), 's');
+                    // draw the ace of spades
+                    drawnCard = FindCard(1, 's');
                 }
 
+                if (drawnCard != null)
+                {
+                    hand.Add(drawnCard);
+                    deck.Remove(drawnCard);
+                    break;
+                }
             }
-            else if (result == 2 || result == 3)
-            {
-                // draw a random heart
-                drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'h');
-            }
-            else
-            {
-                // draw the ace of spades if it wasn't drawn already
-                Debug.Log("drew ace of spades");
-                drawnCard = FindCard(1, 's');
-            }
-
-            if (drawnCard != null)
-            {
-                hand.Add(drawnCard);
-                deck.Remove(drawnCard);
-                //Debug.Log(deck.Remove(drawnCard) ? "card removal success" : "card removal failed);
-            }            
         }
 
         return hand;
@@ -224,39 +216,69 @@ public class Card
     private int value;
     private char suit;
     private Color color;
-    private string name;
-    
+    private string valueName;
+    private string suitName;
+
     public Card(int cardValue, char cardSuit)
     {
         value = cardValue;
         suit = cardSuit;
-        SetName();
+        SetValueName();
+        SetSuitName();
         SetColor();
     }
 
-    public string GetName()
+    public string GetSuitName()
     {
-        return name;
+        return suitName;
     }
 
-    private void SetName()
+    private void SetSuitName()
     {
+        switch (suit)
+        {
+            case 'h':
+                suitName = "Hearts";
+                break;
+            case 'd':
+                suitName = "Diamonds";
+                break;
+            case 'c':
+                suitName = "Clubs";
+                break;
+            case 's':
+                suitName = "Spades";
+                break;
+            default:
+                suitName = null;
+                break;
+        }
+    }
+
+    public string GetValueName()
+    {
+        return valueName;
+    }
+
+    private void SetValueName()
+    {
+        // aces = 1, jacks = 11, queens = 12, kings = 13
         switch (value)
         {
             case 1:
-                name = "Ace";
+                valueName = "Ace";
                 break;
             case 11:
-                name = "Jack";
+                valueName = "Jack";
                 break;
             case 12:
-                name = "Queen";
+                valueName = "Queen";
                 break;
             case 13:
-                name = "King";
+                valueName = "King";
                 break;
             default:
-                name = value.ToString();
+                valueName = value.ToString();
                 break;
         }
     }
