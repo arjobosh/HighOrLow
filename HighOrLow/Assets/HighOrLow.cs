@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -10,11 +11,13 @@ public class HighOrLow : MonoBehaviour
     private List<Card> hand;
     private List<GameObject> sprites;
 
+    public GameObject cardBack;
     public int cardsToDraw;
     public Text deckText;
     public Text handText1;
     public Text handText2;
     public Text winnerText;
+    public Button drawBtn;
 
     void Start()
     {
@@ -38,7 +41,8 @@ public class HighOrLow : MonoBehaviour
 
     private void CreateCardSprite(Card card, int handIndex)
     {
-        string spritePath = GenerateAssetPath(card.GetValue(), card.GetSuitName(), card.GetValueName(), card.IsFaceCard());
+        string spritePath = GenerateAssetPath(card.GetValue(), 
+            card.GetSuitName(), card.GetValueName(), card.IsFaceCard());
 
         GameObject cardSprite = new GameObject();
 
@@ -70,8 +74,7 @@ public class HighOrLow : MonoBehaviour
     private void DisplayWinner()
     {
         Card winner = DetermineHigherCard();
-        winnerText.text = winner.GetFullName() + " wins!";
-        //Debug.Log(winner.GetFullName());
+        winnerText.text = winner.GetFullName() + "\nwins!";        
     }
 
     private Card DetermineHigherCard()
@@ -98,45 +101,77 @@ public class HighOrLow : MonoBehaviour
         // discard previous hand
         DiscardHand();
         
-
         if (deck.GetCardCount() > 0)
         {
+            // get new hand
             hand = deck.Draw(cardsToDraw);
             handText1.text = "";
             handText2.text = "";
+            winnerText.text = "";
 
-            /*for (int i = 0; i < hand.Count; i++)
-            {                                
-                if (hand[i] != null)
-                    handText1.text += hand[i].GetValueName() + " of " + hand[i].GetSuitName();
+            // animate card draw            
+            GameObject copy1 = Instantiate(cardBack);
+            GameObject copy2 = Instantiate(cardBack);
+            StartCoroutine(AnimateCardDraw(copy1, copy2));            
 
-                if (i != hand.Count - 1)
-                    handText1.text += ", ";
-
-                // display card
-                CreateCardSprite(hand[i], i);
-            }*/
-
-            if (hand[0] != null)
-                handText1.text = hand[0].GetFullName();
-
-            if (hand[1] != null)
-                handText2.text = hand[1].GetFullName();
-
-            // display cards
-            CreateCardSprite(hand[0], 0);
-            CreateCardSprite(hand[1], 1);
-
-            deckText.text = "Deck: " + deck.GetCardCount();
-
-            // announce winner
-            DisplayWinner();
+            // display cards and announce winner after animation
+            StartCoroutine(RevealCardDraw(1.0f, copy1, copy2));
+            
         }
         else
         {         
+            // notify refresh
+
+
             // refresh deck
             Start();
         }
-        Debug.Log(deck.CountCurrentSuit('h'));
+        
+        //Debug.Log(deck.CountCurrentSuit('h'));
+    }
+
+    private IEnumerator RevealCardDraw(float time, GameObject first, GameObject second)
+    {
+        yield return new WaitForSeconds(time);
+        
+        Destroy(first);
+        Destroy(second);
+
+        CreateCardSprite(hand[0], 0);
+        CreateCardSprite(hand[1], 1);
+
+        if (hand[0] != null)
+            handText1.text = hand[0].GetFullName();
+
+        if (hand[1] != null)
+            handText2.text = hand[1].GetFullName();
+
+        yield return new WaitForSeconds(time / 2.0f);
+
+        DisplayWinner();
+        drawBtn.interactable = true;
+    }
+
+    private IEnumerator AnimateCardDraw(GameObject card1, GameObject card2)
+    {
+        drawBtn.interactable = false;
+
+        float time = 0f;
+        float moveSpeed = 2.0f;
+        Vector3 ogPos1 = card1.transform.position;
+        Vector3 ogPos2 = card2.transform.position;
+        Vector3 endPos1 = new Vector3(-3.0f, -1.0f);
+        Vector3 endPos2 = new Vector3(3.0f, -1.0f);
+        
+        while (time <= 1.0f)
+        {
+            time += moveSpeed * Time.deltaTime;
+            card1.transform.position = Vector3.Lerp(ogPos1, endPos1, time);
+            card2.transform.position = Vector3.Lerp(ogPos2, endPos2, time);
+            yield return new WaitForSeconds(Time.deltaTime / moveSpeed);
+        }
+
+        card1.transform.position = endPos1;
+        card2.transform.position = endPos2;
     }
 }
