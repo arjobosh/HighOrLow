@@ -10,13 +10,14 @@ public class HighOrLow : MonoBehaviour
     private List<Card> hand;
     private List<GameObject> sprites;
 
-    private int cardsToDraw;
+    public int cardsToDraw;
     public Text deckText;
-    public Text handText;
+    public Text handText1;
+    public Text handText2;
+    public Text winnerText;
 
     void Start()
     {
-        cardsToDraw = 2;
         deck = new Deck();
         hand = new List<Card>();
         sprites = new List<GameObject>();
@@ -40,6 +41,8 @@ public class HighOrLow : MonoBehaviour
         string spritePath = GenerateAssetPath(card.GetValue(), card.GetSuitName(), card.GetValueName(), card.IsFaceCard());
 
         GameObject cardSprite = new GameObject();
+
+        cardSprite.name = "Card" + (handIndex + 1).ToString();
 
         cardSprite
             .AddComponent<SpriteRenderer>()
@@ -67,7 +70,8 @@ public class HighOrLow : MonoBehaviour
     private void DisplayWinner()
     {
         Card winner = DetermineHigherCard();
-        Debug.Log(winner.GetFullName());
+        winnerText.text = winner.GetFullName() + " wins!";
+        //Debug.Log(winner.GetFullName());
     }
 
     private Card DetermineHigherCard()
@@ -91,335 +95,48 @@ public class HighOrLow : MonoBehaviour
 
     public void DrawCards()
     {
+        // discard previous hand
         DiscardHand();
+        
 
         if (deck.GetCardCount() > 0)
         {
             hand = deck.Draw(cardsToDraw);
-            handText.text = "";           
+            handText1.text = "";
+            handText2.text = "";
 
-            for (int i = 0; i < hand.Count; i++)
-            {
+            /*for (int i = 0; i < hand.Count; i++)
+            {                                
                 if (hand[i] != null)
-                    handText.text += hand[i].GetValueName() + " of " + hand[i].GetSuitName();
+                    handText1.text += hand[i].GetValueName() + " of " + hand[i].GetSuitName();
 
                 if (i != hand.Count - 1)
-                    handText.text += ", ";
+                    handText1.text += ", ";
 
                 // display card
                 CreateCardSprite(hand[i], i);
-            }
-            
+            }*/
+
+            if (hand[0] != null)
+                handText1.text = hand[0].GetFullName();
+
+            if (hand[1] != null)
+                handText2.text = hand[1].GetFullName();
+
+            // display cards
+            CreateCardSprite(hand[0], 0);
+            CreateCardSprite(hand[1], 1);
+
             deckText.text = "Deck: " + deck.GetCardCount();
 
-            // display winner
+            // announce winner
             DisplayWinner();
-            
-            // discard old cards
         }
         else
-        {
-            Debug.Log("out of cards !");            
-            // refresh deck            
+        {         
+            // refresh deck
+            Start();
         }
-    }
-}
-
-public class Deck
-{
-    private List<Card> deck;
-    private int deckSize;
-
-    public Deck()
-    {
-        // standard deck constructor
-        deckSize = 52;
-        deck = new List<Card>();
-        InitializeDeck();
-    }
-
-    public Deck(int numCards)
-    {
-        // constructor for deck variants
-        deckSize = numCards;
-        deck = new List<Card>();
-        InitializeDeck(numCards);
-    }
-
-    public List<Card> Draw(int numToDraw)
-    {
-        List<Card> hand = new List<Card>();
-
-        for (int i = 0; i < numToDraw; i++)
-        {
-            while (true)
-            {
-                Card drawnCard;
-
-                // hearts 2x chance, ace of spades 3x chance
-                int result = UnityEngine.Random.Range(1, 7);
-
-                if (result == 1)
-                {
-                    // draw a random non-special card
-                    int randomSuit = UnityEngine.Random.Range(1, 4);
-
-                    if (randomSuit == 1)
-                        drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'd');
-                    else if (randomSuit == 2)
-                        drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'c');
-                    else
-                        drawnCard = FindCard(UnityEngine.Random.Range(2, 14), 's');
-                }
-                else if (result == 2 || result == 3)
-                {
-                    // draw a random hearts card
-                    drawnCard = FindCard(UnityEngine.Random.Range(1, 14), 'h');
-                }
-                else
-                {
-                    // draw the ace of spades
-                    drawnCard = FindCard(1, 's');
-                }
-
-                if (drawnCard != null)
-                {
-                    hand.Add(drawnCard);
-                    deck.Remove(drawnCard);
-                    break;
-                }
-            }
-        }
-
-        return hand;
-    }
-
-    public void Shuffle()
-    {
-        int r;
-        for (int i = 0; i < deck.Count; i++)
-        {
-            r = UnityEngine.Random.Range(1, deck.Count);
-            Card temp = deck[i];
-            deck[i] = deck[r];
-            deck[r] = temp;
-        }
-    }
-
-    public int GetDeckSize()
-    {
-        return deckSize;
-    }
-
-    public int GetCardCount()
-    {
-        return deck.Count;
-    }
-
-    public void PrintDeck()
-    {
-        int b = 0;
-        while (b < deck.Count)
-        {
-            Debug.Log(deck[b].GetValue() + " : " + deck[b].GetSuit());
-            b++;
-        }
-
-        //Debug.Log(deck.Count);
-    }
-
-    private void InitializeDeck()
-    {
-        int maxCardVal = 13;     
-
-        for (int i = 1; i <= maxCardVal; i++)
-        {
-            Card hearts = new Card(i, 'h');            
-            Card clubs = new Card(i, 'c');
-            Card diamonds = new Card(i, 'd');
-            Card spades = new Card(i, 's');
-
-            deck.Add(hearts);
-            deck.Add(clubs);
-            deck.Add(diamonds);
-            deck.Add(spades);
-        }
-    }
-
-    private void InitializeDeck(int maxVal)
-    {
-        // variant deck build        
-    }
-    
-    private Card FindCard(int value, char suit)
-    {
-        for (int i = 0; i < deck.Count; i++)
-        {
-            if (deck[i].GetValue() == value && deck[i].GetSuit() == suit)
-                return deck[i];            
-        }
-
-        return null;
-    }
-
-    private int CountCurrentSuit(char suit)
-    {
-        int suitCount = 0;
-
-        for (int i = 0; i < deck.Count; i++)
-        {
-            if (deck[i].GetSuit().Equals(suit))
-            {
-                suitCount++;
-            }
-        }
-
-        return suitCount;
-    }
-
-    private int SumCurrentDeck()
-    {
-        int b = 0, sum = 0;
-        while (b < deck.Count)
-        {
-            sum += deck[b].GetValue();
-            b++;
-        }
-
-        //Debug.Log("SUM = " + deck.SumDeck());
-
-        return sum;
-    }
-}
-
-public class Card
-{
-    private int value;
-    private char suit;
-    private Color color;
-    private string valueName;
-    private string suitName;
-    private int suitValue;
-
-    public Card(int cardValue, char cardSuit)
-    {
-        value = cardValue;
-        suit = cardSuit;
-        SetValueName();
-        SetSuitName();
-        SetSuitValue();
-        SetColor();
-    }
-
-    public bool IsFaceCard()
-    {
-        return (value == 1 || value == 11 || value == 12 || value == 13);
-    }
-
-    public string GetFullName()
-    {
-        return valueName + " of " + suitName;
-    }
-
-    public int GetSuitValue()
-    {
-        return suitValue;
-    }
-
-    private void SetSuitValue()
-    {
-        switch (suit)
-        {
-            case 's':
-                suitValue = 1;
-                break;
-            case 'h':
-                suitValue = 2;
-                break;
-            case 'd':
-                suitValue = 3;
-                break;
-            case 'c':
-                suitValue = 4;
-                break;            
-            default:
-                suitName = null;
-                break;
-        }
-    }
-
-    public string GetSuitName()
-    {
-        return suitName;
-    }
-
-    private void SetSuitName()
-    {
-        switch (suit)
-        {
-            case 's':
-                suitName = "Spades";
-                break;
-            case 'h':
-                suitName = "Hearts";
-                break;
-            case 'd':
-                suitName = "Diamonds";
-                break;
-            case 'c':
-                suitName = "Clubs";
-                break;
-            default:
-                suitName = null;
-                break;
-        }
-    }
-
-    public string GetValueName()
-    {
-        return valueName;
-    }
-
-    private void SetValueName()
-    {
-        // aces = 1, jacks = 11, queens = 12, kings = 13
-        switch (value)
-        {
-            case 1:
-                valueName = "Ace";
-                break;
-            case 11:
-                valueName = "Jack";
-                break;
-            case 12:
-                valueName = "Queen";
-                break;
-            case 13:
-                valueName = "King";
-                break;
-            default:
-                valueName = value.ToString();
-                break;
-        }
-    }
-
-    private void SetColor()
-    {
-        color = suit.Equals('h') || suit.Equals('d') ? Color.red : Color.black;
-    }
-
-    public Color GetColor()
-    {
-        return color;
-    }
-
-    public int GetValue()
-    {
-        return value;
-    }
-
-    public char GetSuit()
-    {
-        return suit;
+        Debug.Log(deck.CountCurrentSuit('h'));
     }
 }
