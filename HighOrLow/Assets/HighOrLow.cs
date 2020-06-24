@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,17 +25,18 @@ public class HighOrLow : MonoBehaviour
         deck = new Deck();
         hand = new List<Card>();
         sprites = new List<GameObject>();
+        
     }
 
     private string GenerateAssetPath(int value, string suit, string name, bool isFace)
     {
-        string path = "Assets/CardArt/" + suit + "/";
+        string path = "CardArt/" + suit + "/";
 
         path += (value < 10) ? "0" : "";
         path += value.ToString() + "_";
         path += (isFace) ? name[0].ToString() : value.ToString();
         path += "_" + suit[0].ToString();
-        path += ".png";
+        //path += ".png";
 
         return path;
     }
@@ -70,9 +70,11 @@ public class HighOrLow : MonoBehaviour
 
         cardSprite.name = "Card" + (handIndex + 1).ToString();
 
+        Debug.Log(spritePath);
+
         cardSprite
             .AddComponent<SpriteRenderer>()
-            .GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            .GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(spritePath);
 
         cardSprite.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.5f);
 
