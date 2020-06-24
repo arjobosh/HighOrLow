@@ -11,7 +11,9 @@ public class HighOrLow : MonoBehaviour
     private List<Card> hand;
     private List<GameObject> sprites;
 
-    public GameObject cardBack;
+    public GameObject cardBack1;
+    public GameObject cardBack2;
+    public GameObject cardBack3;
     public int cardsToDraw;
     public Text deckText;
     public Text handText1;
@@ -39,10 +41,30 @@ public class HighOrLow : MonoBehaviour
         return path;
     }
 
-    private void CreateCardSprite(Card card, int handIndex)
+    private void DownsizeDeck()
     {
-        string spritePath = GenerateAssetPath(card.GetValue(), 
-            card.GetSuitName(), card.GetValueName(), card.IsFaceCard());
+        Debug.Log(deck.GetCurrentCardCount());
+
+        if (deck.GetCurrentCardCount() < deck.GetDeckSize() - (deck.GetDeckSize() / 3) && cardBack1.activeSelf)
+        {
+            cardBack1.SetActive(false);
+        }
+        
+        if (deck.GetCurrentCardCount() < (deck.GetDeckSize() / 3) && cardBack2.activeSelf)
+        {
+            cardBack2.SetActive(false);
+        }
+
+        if (deck.GetCurrentCardCount() == 0 && cardBack3.activeSelf)
+        {
+            cardBack3.SetActive(false);
+        }
+    }
+
+    private void CreateCardSprite(Card card, int handIndex)
+    {        
+        string spritePath = 
+            GenerateAssetPath(card.GetValue(), card.GetSuitName(), card.GetValueName(), card.IsFaceCard());
 
         GameObject cardSprite = new GameObject();
 
@@ -100,30 +122,35 @@ public class HighOrLow : MonoBehaviour
     {
         // discard previous hand
         DiscardHand();
-        
-        if (deck.GetCardCount() > 0)
+        handText1.text = "";
+        handText2.text = "";
+        winnerText.text = "";
+
+        if (deck.GetCurrentCardCount() > 0)
         {
             // get new hand
             hand = deck.Draw(cardsToDraw);
-            handText1.text = "";
-            handText2.text = "";
-            winnerText.text = "";
 
-            // animate card draw            
-            GameObject copy1 = Instantiate(cardBack);
-            GameObject copy2 = Instantiate(cardBack);
+            // animate card draw
+            GameObject copy1 = Instantiate(cardBack3);
+            GameObject copy2 = Instantiate(cardBack3);
+
             StartCoroutine(AnimateCardDraw(copy1, copy2));            
 
             // display cards and announce winner after animation
             StartCoroutine(RevealCardDraw(1.0f, copy1, copy2));
-            
+
+            DownsizeDeck();
         }
         else
-        {         
+        {
             // notify refresh
-
+            winnerText.text = "Reshuffling deck . . .";
 
             // refresh deck
+            cardBack1.SetActive(true);
+            cardBack2.SetActive(true);
+            cardBack3.SetActive(true);
             Start();
         }
         

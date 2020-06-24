@@ -87,7 +87,7 @@ public class Deck
         return deckSize;
     }
 
-    public int GetCardCount()
+    public int GetCurrentCardCount()
     {
         return deck.Count;
     }
