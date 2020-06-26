@@ -14,12 +14,12 @@ public class Deck
         InitializeDeck();
     }
 
-    public Deck(int numCards)
+    public Deck(int maxCardVal, int numCards)
     {
         // constructor for deck variants
         deckSize = numCards;
         deck = new List<Card>();
-        InitializeDeck(numCards);
+        InitializeDeck(maxCardVal, numCards);
     }
 
     public List<Card> Draw(int numToDraw)
@@ -74,6 +74,22 @@ public class Deck
         return hand;
     }
 
+    public void SetDeckActive(bool status)
+    {
+        for (int i = 0; i < deck.Count; i++)
+        {
+            deck[i].SetCardActive(status);
+        }
+    }
+
+    public void SetDeckPosition(Vector3 pos)
+    {
+        for (int i = 0; i < deck.Count; i++)
+        {
+            deck[i].SetCardPosition(pos);
+        }
+    }
+
     public void Shuffle()
     {
         int r;
@@ -126,7 +142,7 @@ public class Deck
         }
     }
 
-    private void InitializeDeck(int maxVal)
+    private void InitializeDeck(int maxVal, int numCards)
     {
         // variant deck build        
     }

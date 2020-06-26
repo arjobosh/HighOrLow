@@ -8,6 +8,7 @@ public class Card
     private string valueName;
     private string suitName;
     private int suitValue;
+    private GameObject sprite;
 
     public Card(int cardValue, char cardSuit)
     {
@@ -17,6 +18,48 @@ public class Card
         SetSuitName();
         SetSuitValue();
         SetColor();
+    }
+
+    public void SetCardActive(bool status)
+    {
+        sprite.SetActive(status);
+    }
+
+    public void SetCardPosition(Vector3 pos)
+    {
+        sprite.transform.position = pos;
+    }
+
+    private string GenerateAssetPath(int value, string suit, string name, bool isFace)
+    {
+        string path = "CardArt/" + suit + "/";
+
+        path += (value < 10) ? "0" : "";
+        path += value.ToString() + "_";
+        path += (isFace) ? name[0].ToString() : value.ToString();
+        path += "_" + suit[0].ToString();        
+
+        return path;
+    }
+
+    public void DestroySprite()
+    {
+        Object.Destroy(sprite);
+    }
+
+    public void CreateSprite()
+    {
+        string spritePath =
+            GenerateAssetPath(value, GetSuitName(), GetValueName(), IsFaceCard());
+
+        sprite = new GameObject();
+        sprite.name = "Card";
+        sprite
+            .AddComponent<SpriteRenderer>()
+            .GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(spritePath);
+
+        sprite.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.5f);
+        sprite.GetComponent<Transform>().localPosition = Vector3.zero;
     }
 
     public bool IsFaceCard()
