@@ -8,13 +8,8 @@ public class SceneHandler : MonoBehaviour
         SceneManager.LoadScene(1);
     }
 
-    public void RulesBtn()
+    public void BackBtn()
     {
-
-    }
-
-    public void QuitBtn()
-    {
-        Application.Quit();
+        SceneManager.LoadScene(0);
     }
 }

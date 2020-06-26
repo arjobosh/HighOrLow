@@ -30,12 +30,11 @@ public class Deck
         {
             while (true)
             {
-                Card drawnCard;
+                Card drawnCard;                
+                int result = Random.Range(1, 101);
 
-                // hearts 2x chance, ace of spades 3x chance
-                int result = Random.Range(1, 7);
-
-                if (result == 1)
+                // non-special 1x chance, hearts 2x chance, ace of spades 3x chance
+                if (result < 17)
                 {
                     // draw a random non-special card
                     int randomSuit = Random.Range(1, 4);
@@ -47,15 +46,19 @@ public class Deck
                     else
                         drawnCard = FindCard(Random.Range(2, 14), 's');
                 }
-                else if (result == 2 || result == 3)
+                else if (result >= 17 && result < 49)
                 {
                     // draw a random hearts card
                     drawnCard = FindCard(Random.Range(1, 14), 'h');
                 }
-                else
+                else if (result >= 49 && result < 97)
                 {
                     // draw the ace of spades
                     drawnCard = FindCard(1, 's');
+                }
+                else
+                {
+                    drawnCard = null;
                 }
 
                 if (drawnCard != null)
@@ -67,6 +70,7 @@ public class Deck
             }
         }
 
+        //Debug.Log("Hearts: " + CountCurrentSuit('h') + "/" + GetCurrentCardCount());
         return hand;
     }
 
@@ -130,10 +134,8 @@ public class Deck
     private Card FindCard(int value, char suit)
     {
         for (int i = 0; i < deck.Count; i++)
-        {
             if (deck[i].GetValue() == value && deck[i].GetSuit() == suit)
                 return deck[i];
-        }
 
         return null;
     }
@@ -143,13 +145,9 @@ public class Deck
         int suitCount = 0;
 
         for (int i = 0; i < deck.Count; i++)
-        {
             if (deck[i].GetSuit().Equals(suit))
-            {
                 suitCount++;
-            }
-        }
-
+        
         return suitCount;
     }
 
