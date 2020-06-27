@@ -22,6 +22,7 @@ public class HighOrLow : MonoBehaviour
     {
         deck = new Deck();
         hand = new List<Card>();
+        deck.Shuffle();
     }
 
     private void DownsizeDeck()
@@ -82,7 +83,12 @@ public class HighOrLow : MonoBehaviour
         if (deck.GetCurrentCardCount() > 0)
         {
             // get new hand
-            hand = deck.Draw(cardsToDraw);
+            //hand = deck.Draw(cardsToDraw);
+            Debug.Log("Card count: " + deck.GetCurrentCardCount() + " | Sum: " + deck.SumCurrentDeck());
+            hand = new List<Card>();
+            hand.Add(deck.TopDeck());
+            hand.Add(deck.TopDeck());
+            Debug.Log("Card count: " + deck.GetCurrentCardCount() + " | Sum: " + deck.SumCurrentDeck());
 
             // animate card draw
             GameObject card1 = Instantiate(cardBack3);
