@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,14 +11,14 @@ public class HighOrLow : MonoBehaviour
     private List<Card> hand;
     private List<GameObject> discards;
     private GameObject[] cardBacks;
-
+    
     public GameObject cardBack1;
     public GameObject cardBack2;
     public GameObject cardBack3;
     public int cardsToDraw;
     public Text handText1;
     public Text handText2;
-    public Text winnerText;
+    public TextMeshProUGUI winnerText;
     public Button drawBtn;
 
     void Start()
@@ -31,7 +32,7 @@ public class HighOrLow : MonoBehaviour
 
     private void DownsizeDeck()
     {        
-        int interval = deck.GetDeckSize() / 3;
+        int interval = deck.GetDeckSize() / cardBacks.Length;
         int deckSize = deck.GetDeckSize();
 
         for (int i = 0; i < cardBacks.Length; i++)
@@ -82,6 +83,14 @@ public class HighOrLow : MonoBehaviour
         return higher;
     }
 
+    private void PlaySound(string type)
+    {
+        GetComponent<AudioSource>().clip =
+            Resources.Load<AudioClip>("CardSounds/card" + char.ToUpper(type[0]) + type.Substring(1, type.Length - 1));
+
+        GetComponent<AudioSource>().Play();
+    }
+
     public void DrawTwoCards()
     {
         // destroy sprites of previous hand
@@ -97,20 +106,21 @@ public class HighOrLow : MonoBehaviour
                 GameObject faceDown2 = Instantiate(cardBack3);
                 discards.Add(faceDown1);
                 discards.Add(faceDown2);
-                StartCoroutine(TranslateCard(faceDown1, new Vector3(-3.0f, -1.0f), new Vector3(-5.0f, 3.2f)));
-                StartCoroutine(TranslateCard(faceDown2, new Vector3(3.0f, -1.0f), new Vector3(-5.0f, 3.2f)));
+                StartCoroutine(TranslateCard(faceDown1, new Vector3(-3.0f, -1.5f), new Vector3(-5.0f, 3.2f)));
+                StartCoroutine(TranslateCard(faceDown2, new Vector3(3.0f, -1.5f), new Vector3(-5.0f, 3.2f)));
             }
 
             // draw twice for new hand
             hand = new List<Card>();
             hand.Add(deck.Draw());
             hand.Add(deck.Draw());
+            PlaySound("Draw");
 
             // animate card draw
             GameObject card1 = Instantiate(cardBack3);
             GameObject card2 = Instantiate(cardBack3);
-            StartCoroutine(TranslateCard(card1, card1.transform.position, new Vector3(-3.0f, -1.0f)));
-            StartCoroutine(TranslateCard(card2, card2.transform.position, new Vector3(3.0f, -1.0f)));
+            StartCoroutine(TranslateCard(card1, card1.transform.position, new Vector3(-3.0f, -1.5f)));
+            StartCoroutine(TranslateCard(card2, card2.transform.position, new Vector3(3.0f, -1.5f)));
 
             // reveal cards and update deck sprites
             StartCoroutine(RevealCardDraw(1.0f, card1, card2));
@@ -127,7 +137,8 @@ public class HighOrLow : MonoBehaviour
             // refresh deck
             for (int i = 0; i < cardBacks.Length; i++)
                 cardBacks[i].SetActive(true);
-            
+
+            PlaySound("Shuffle");
             Start();
         }
     }
@@ -170,10 +181,12 @@ public class HighOrLow : MonoBehaviour
         Destroy(first);
         Destroy(second);
 
-        hand[0].CreateSprite();
-        hand[0].SetCardPosition(new Vector3(-3.0f, -1.0f));
-        hand[1].CreateSprite();
-        hand[1].SetCardPosition(new Vector3(3.0f, -1.0f));
+        float offset = 6.0f;
+        for (int i = 0; i < hand.Count; i++)
+        {
+            hand[i].CreateSprite();
+            hand[i].SetCardPosition(new Vector3(-3.0f + i * offset, -1.5f));
+        }
 
         if (hand[0] != null)
             handText1.text = hand[0].GetFullName();

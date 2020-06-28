@@ -12,4 +12,9 @@ public class SceneHandler : MonoBehaviour
     {
         SceneManager.LoadScene(0);
     }
+
+    public void QuitBtn()
+    {
+        Application.Quit();
+    }
 }
